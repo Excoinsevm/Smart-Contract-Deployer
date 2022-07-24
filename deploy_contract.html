@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploying counter to Polygon</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+    <div>
+        <p>Deploy your smartcontract from here.  <span ></span></p>
+        <p>Just enter the contracts bytecode and ABI: <span></span></p>
+       
+        <p><strong>Bytecode:</strong></p>
+        <textarea id="bytecode" ></textarea>
+    <br>
+    
+    <p><strong>ABI:</strong></p>
+        <textarea type="JSON" id="ABI"></textarea>
+        <button id="deploy">Deploy</button>
+        <p>Wallet Address: <span id="wallet address"></span></p>
+        <p id="message"> Hey Buddy! </p>
+    </div>
+    <script type="text/javascript">
+        //1. Connect metamask to our site. Get users address
+        var account = null;
+        var contract = null;
+
+        var ABI="";
+        var BYTECODE="";
+       var ADDRESS="";
+
+
+
+        ( async()=>{
+        if(window.ethereum){
+            await window.ethereum.send('eth_requestAccounts');
+            window.web3 = new Web3(window.ethereum);
+
+
+            var accounts = await web3.eth.getAccounts();
+            account= accounts[0];
+            document.getElementById("wallet address").textContent = account;           
+            
+        }
+    })();
+
+
+          
+
+      
+    // 2. Deploy the bytecode
+
+    document.getElementById("deploy").onclick=()=>{
+         ABI = JSON.parse(document.getElementById("ABI").value.toString());
+        //console.log(ABI.toString());
+
+        BYTECODE = "0x"+document.getElementById("bytecode").value.toString();
+        //console.log(BYTECODE.toString());
+
+        if(ABI==null||BYTECODE==null){
+            alert("Please Enter data");
+        }
+        else
+        {
+                 deploy(ABI,BYTECODE);
+                                
+        }
+    }
+
+
+    const deploy = async (abi, bytecode)=>{
+        var deployingContract = new web3.eth.Contract(abi).deploy({
+            data: bytecode,
+            arguments: []
+        });
+        var estimatedGas = await deployingContract.estimateGas();
+        var deployedContract = await deployingContract.send({
+            from: account
+           })
+
+        console.log("Address of the contract "+deployedContract.options.address);
+        ADDRESS = deployedContract.options.address.toString();
+        contract =new web3.eth.Contract(ABI,ADDRESS);
+        let msg=document.getElementById("message");
+        msg.textContent= "Congrats! Your contract has been deployed to address: "+ADDRESS;
+        msg.style.color="blue";
+        return deployedContract.options.address;
+    }
+    
+    
+
+    </script>
+</body>
+</html>
